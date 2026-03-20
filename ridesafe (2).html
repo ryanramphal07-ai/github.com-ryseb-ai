@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#D32F2F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RideSafe">
+<meta name="description" content="Your personal safety companion for every ride. Snap driver & licence plate, share with trusted contacts instantly.">
+<title>RideSafe — by Ascendent Imperion (AI) Solutions</title>
+
+<!-- PWA Manifest (inline for single-file portability) -->
+<script>
+const manifestData = {
+  name: "RideSafe",
+  short_name: "RideSafe",
+  description: "Your personal safety companion for every ride.",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#D32F2F",
+  theme_color: "#D32F2F",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23D32F2F' rx='32'/%3E%3Cpath d='M96 20L40 48v48c0 44.3 30.7 85.8 56 96 25.3-10.2 56-51.7 56-96V48L96 20z' fill='white'/%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23D32F2F' rx='80'/%3E%3Cpath d='M256 53L107 128v128c0 118 81.7 228 149 256 67.3-28 149-138 149-256V128L256 53z' fill='white'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+document.write('<link rel="manifest" href="' + manifestURL + '">');
+</script>
+
+<!-- iOS splash / icons -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23D32F2F' rx='40'/%3E%3Cpath d='M90 18L37 44v45c0 41.5 28.7 80.3 53 89.9 24.3-9.6 53-48.4 53-89.9V44L90 18z' fill='white'/%3E%3C/svg%3E">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --red: #D32F2F;
+  --red-dark: #B71C1C;
+  --red-light: #FFEBEE;
+  --red-mid: #EF9A9A;
+  --green: #2E7D32;
+  --green-light: #E8F5E9;
+  --white: #ffffff;
+  --surf: #ffffff;
+  --surf2: #f5f5f5;
+  --surf3: #eeeeee;
+  --bdr: rgba(0,0,0,0.1);
+  --bdr2: rgba(0,0,0,0.18);
+  --txt: #1a1a1a;
+  --mute: #666666;
+  --hint: #999999;
+  --rmd: 8px;
+  --rlg: 12px;
+  --rxl: 20px;
+  --fh: 'Syne', sans-serif;
+  --fb: 'DM Sans', sans-serif;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--fb);
+  background: #1a1a1a;
+  color: var(--txt);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── APP SHELL ─── */
+#app {
+  width: 100%;
+  height: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--surf);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── STATUS BAR ─── */
+.sbar {
+  background: var(--red);
+  padding: calc(var(--safe-area-top) + 8px) 20px 7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.sbar-time { font-family: var(--fh); font-size: 13px; font-weight: 700; color: #fff; }
+.sbar-icons { display: flex; gap: 6px; align-items: center; }
+.sbar-icons svg { fill: #fff; opacity: .9; }
+
+/* ─── APP HEADER ─── */
+.app-header {
+  background: var(--red);
+  padding: 10px 18px 12px;
+  flex-shrink: 0;
+}
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.logo-text { font-family: var(--fh); font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; display: flex; align-items: center; gap: 4px; }
+.logo-text .dim { opacity: .5; }
+.header-sub { font-size: 11px; color: rgba(255,255,255,.7); letter-spacing: .3px; }
+.notif-btn { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.15); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.notif-btn svg { fill: #fff; }
+
+/* ─── BRAND STRIP ─── */
+.brand-strip {
+  background: rgba(0,0,0,.2);
+  padding: 5px 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.brand-badge {
+  background: rgba(255,255,255,.15);
+  border: 0.5px solid rgba(255,255,255,.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--fh);
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255,255,255,.8);
+  letter-spacing: .8px;
+}
+.brand-divider { width: 1px; height: 11px; background: rgba(255,255,255,.2); }
+.brand-name { font-size: 9px; color: rgba(255,255,255,.5); letter-spacing: .2px; }
+.brand-name strong { color: rgba(255,255,255,.7); font-weight: 500; }
+
+/* ─── SCREENS ─── */
+.screen { display: none; flex-direction: column; flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.screen.active { display: flex; }
+
+.scr-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px 10px;
+  border-bottom: 0.5px solid var(--bdr);
+  flex-shrink: 0;
+}
+.back-btn { background: none; border: none; cursor: pointer; color: var(--txt); padding: 4px; display: flex; align-items: center; }
+.back-btn svg { fill: currentColor; }
+.scr-title { font-family: var(--fh); font-size: 15px; font-weight: 700; color: var(--txt); }
+
+/* ─── HOME ─── */
+.home-banner {
+  background: var(--red);
+  padding: 14px 18px 18px;
+  text-align: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.banner-icon { margin-bottom: 8px; }
+.banner-icon svg { width: 46px; height: 46px; fill: #fff; opacity: .9; }
+.banner-title { font-family: var(--fh); font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.banner-sub { font-size: 12px; opacity: .75; line-height: 1.5; }
+
+.progress-steps { display: flex; padding: 14px 18px 0; }
+.ps-item { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+.ps-item:not(:last-child)::after { content: ''; position: absolute; top: 13px; left: calc(50% + 15px); right: calc(-50% + 15px); height: 1.5px; background: var(--bdr2); }
+.ps-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--fh); font-size: 11px; font-weight: 700; margin-bottom: 5px; z-index: 1; position: relative; transition: background .2s, color .2s; }
+.ps-dot.done { background: var(--green-light); color: var(--green); }
+.ps-dot.active { background: var(--red); color: #fff; }
+.ps-dot.idle { background: var(--surf2); color: var(--mute); border: 0.5px solid var(--bdr2); }
+.ps-lbl { font-size: 10px; color: var(--mute); text-align: center; line-height: 1.3; padding-bottom: 10px; transition: color .2s; }
+.ps-lbl.live { color: var(--red); font-weight: 500; }
+
+.snap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 16px; }
+.snap-slot {
+  border: 1.5px dashed var(--bdr2);
+  border-radius: var(--rlg);
+  aspect-ratio: 4/3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  background: var(--surf2);
+  transition: border-color .15s, background .15s;
+  position: relative;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.snap-slot:active { transform: scale(.97); }
+.snap-slot.done { border: 1.5px solid var(--green); background: var(--green-light); }
+.slot-icon svg { fill: var(--mute); transition: fill .2s; }
+.snap-slot.done .slot-icon svg { fill: var(--green); }
+.slot-lbl { font-size: 11px; font-weight: 500; color: var(--mute); text-align: center; line-height: 1.4; padding: 0 6px; transition: color .2s; }
+.snap-slot.done .slot-lbl { color: var(--green); }
+.slot-tick { position: absolute; top: 6px; right: 7px; background: var(--green-light); border: 0.5px solid var(--green); color: var(--green); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; }
+
+.action-btn {
+  margin: 0 16px 12px;
+  border: none;
+  border-radius: var(--rlg);
+  padding: 14px 18px;
+  font-family: var(--fh);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity .15s, transform .1s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.action-btn:active { transform: scale(.97); }
+.btn-primary { background: var(--red); color: #fff; }
+.btn-primary:not(:disabled):active { background: var(--red-dark); }
+.btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+.btn-secondary { background: var(--surf2); color: var(--txt); border: 0.5px solid var(--bdr2); }
+
+.sos-bar {
+  margin: 0 16px 14px;
+  background: var(--red-light);
+  border: 0.5px solid var(--red-mid);
+  border-radius: var(--rlg);
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  animation: sos-pulse 2s infinite;
+}
+.sos-bar:active { transform: scale(.98); }
+@keyframes sos-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,.25)} 50%{box-shadow:0 0 0 7px rgba(211,47,47,0)} }
+.sos-label { font-size: 12px; font-weight: 500; color: var(--red-dark); margin-bottom: 2px; }
+.sos-hint { font-size: 10px; color: #e57373; }
+.sos-chip { background: var(--red-dark); color: #fff; border: none; border-radius: var(--rmd); padding: 7px 14px; font-family: var(--fh); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+.recent-sec { padding: 0 16px 16px; }
+.sec-head { font-size: 11px; font-weight: 700; color: var(--mute); text-transform: uppercase; letter-spacing: .9px; margin-bottom: 10px; font-family: var(--fh); }
+.trip-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--bdr); cursor: pointer; }
+.trip-row:last-child { border-bottom: none; }
+.trip-thumb { width: 40px; height: 40px; border-radius: 10px; background: var(--red-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.trip-thumb svg { fill: var(--red); }
+.trip-info { flex: 1; min-width: 0; }
+.trip-name { font-size: 13px; font-weight: 500; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trip-meta { font-size: 11px; color: var(--mute); margin-top: 1px; }
+.trip-badge { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 20px; background: var(--green-light); color: var(--green); white-space: nowrap; }
+
+.footer-brand { padding: 10px 16px 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border-top: 0.5px solid var(--bdr); }
+.footer-ai-badge { background: var(--surf2); border: 0.5px solid var(--bdr2); border-radius: 4px; padding: 2px 6px; font-family: var(--fh); font-size: 8px; font-weight: 700; color: var(--mute); letter-spacing: .8px; }
+.footer-brand-text { font-size: 9px; color: var(--mute); letter-spacing: .2px; }
+
+/* ─── CAMERA ─── */
+.cam-wrap { background: #0a0a0a; flex: 1; display: flex; flex-direction: column; }
+.cam-topbar { background: #111; padding: 12px 16px; display: flex; align-items: center; border-bottom: 0.5px solid #222; flex-shrink: 0; }
+.cam-back { background: none; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--fh); font-size: 12px; font-weight: 500; }
+.cam-back svg { fill: #fff; }
+.cam-title { color: #fff; font-family: var(--fh); font-size: 13px; font-weight: 700; margin-left: auto; }
+.cam-modes { display: flex; background: #111; border-bottom: 0.5px solid #222; flex-shrink: 0; }
+.cam-mode { flex: 1; padding: 9px 4px; text-align: center; font-size: 11px; font-weight: 500; color: rgba(255,255,255,.35); cursor: pointer; border-bottom: 2px solid transparent; }
+.cam-mode.on { color: #fff; border-bottom-color: var(--red); }
+
+.viewfinder { flex: 1; background: #0d0d0d; display: flex; align-items: center; justify-content: center; min-height: 220px; position: relative; overflow: hidden; }
+.vf-inner { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+.vf-ghost { opacity: .1; }
+.vf-ghost svg { fill: #fff; }
+.c-tl,.c-tr,.c-bl,.c-br { position: absolute; width: 22px; height: 22px; border-color: var(--red); border-style: solid; }
+.c-tl { top: 14px; left: 14px; border-width: 2px 0 0 2px; }
+.c-tr { top: 14px; right: 14px; border-width: 2px 2px 0 0; }
+.c-bl { bottom: 14px; left: 14px; border-width: 0 0 2px 2px; }
+.c-br { bottom: 14px; right: 14px; border-width: 0 2px 2px 0; }
+.vf-pill { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(211,47,47,.85); color: #fff; font-size: 10px; padding: 4px 12px; border-radius: 20px; white-space: nowrap; font-weight: 500; }
+.vf-tip-box { position: absolute; background: rgba(0,0,0,.6); color: rgba(255,255,255,.9); font-size: 11px; padding: 7px 14px; border-radius: 8px; text-align: center; line-height: 1.5; }
+.plate-target { border: 2px solid var(--red); border-radius: 6px; width: 65%; padding: 13px 8px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 19px; letter-spacing: 4px; color: rgba(255,255,255,.12); font-weight: 700; }
+
+.cam-controls { background: #0a0a0a; padding: 16px 20px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.cam-side { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.08); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.cam-side svg { fill: #fff; }
+.shutter { width: 68px; height: 68px; border-radius: 50%; background: #fff; border: 4px solid rgba(255,255,255,.2); box-shadow: 0 0 0 3px var(--red); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .1s; }
+.shutter:active { transform: scale(.9); }
+.shutter-inner { width: 52px; height: 52px; border-radius: 50%; background: #fff; pointer-events: none; }
+
+.cam-tips { background: #111; padding: 11px 16px 16px; flex-shrink: 0; }
+.tips-hd { font-size: 10px; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 7px; }
+.tip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tip-p { background: rgba(255,255,255,.07); border: 0.5px solid rgba(255,255,255,.1); border-radius: 20px; padding: 4px 10px; font-size: 10px; color: rgba(255,255,255,.55); }
+
+/* ─── REVIEW ─── */
+.dual-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 13px 16px; }
+.shot-card { border: 0.5px solid var(--bdr); border-radius: var(--rlg); overflow: hidden; }
+.shot-img { background: #111; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; position: relative; }
+.shot-img svg { opacity: .15; fill: #fff; }
+.shot-ok { position: absolute; top: 6px; right: 6px; background: var(--green-light); color: var(--green); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+.shot-foot { padding: 8px 10px; background: var(--surf); }
+.shot-lbl { font-size: 12px; font-weight: 500; color: var(--txt); }
+.shot-sub { font-size: 10px; color: var(--mute); margin-top: 1px; }
+
+.meta-chips { display: flex; gap: 7px; padding: 0 16px 10px; flex-wrap: wrap; }
+.meta-chip { background: var(--surf2); border: 0.5px solid var(--bdr); border-radius: 20px; padding: 5px 11px; font-size: 11px; color: var(--mute); }
+.meta-chip b { color: var(--txt); font-weight: 500; }
+
+.form-sec { padding: 0 16px 12px; }
+.f-lbl { font-size: 11px; font-weight: 500; color: var(--mute); display: block; margin-bottom: 4px; }
+.f-inp { width: 100%; background: var(--surf2); border: 0.5px solid var(--bdr); border-radius: var(--rmd); padding: 10px 12px; font-size: 13px; color: var(--txt); font-family: var(--fb); margin-bottom: 10px; outline: none; -webkit-appearance: none; }
+.f-inp:focus { border-color: var(--red); }
+.f-plate { text-transform: uppercase; letter-spacing: 3px; font-weight: 500; font-size: 14px; font-family: monospace; }
+
+.contacts-sec { padding: 0 16px 8px; }
+.c-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.c-chip { display: flex; align-items: center; gap: 5px; background: var(--surf2); border: 0.5px solid var(--bdr); border-radius: 20px; padding: 5px 11px; font-size: 12px; color: var(--mute); cursor: pointer; transition: all .12s; -webkit-user-select: none; user-select: none; }
+.c-chip.sel { background: var(--red-light); border-color: var(--red); color: var(--red-dark); font-weight: 500; }
+.c-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* ─── CONTACTS SCREEN ─── */
+.contacts-body { padding: 14px 16px; flex: 1; overflow-y: auto; }
+.contacts-note { font-size: 12px; color: var(--mute); line-height: 1.6; margin-bottom: 14px; padding: 10px 12px; background: var(--surf2); border-radius: var(--rmd); }
+.ct-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 0.5px solid var(--bdr); }
+.ct-item:last-of-type { border-bottom: none; }
+.c-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--fh); font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.c-info { flex: 1; }
+.c-name { font-size: 13px; font-weight: 500; color: var(--txt); }
+.c-role { font-size: 11px; color: var(--mute); margin-top: 1px; }
+.toggle { width: 38px; height: 22px; border-radius: 20px; border: none; cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+.toggle.on { background: var(--green); }
+.toggle.off { background: var(--bdr2); }
+.toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 2px; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle.on::after { left: 18px; }
+.toggle.off::after { left: 2px; }
+.add-ct { width: 100%; background: transparent; border: 0.5px dashed var(--bdr2); border-radius: var(--rlg); padding: 12px; font-size: 13px; color: var(--mute); cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--fb); }
+.add-ct svg { fill: var(--mute); }
+.auto-card { margin-top: 16px; background: var(--surf2); border-radius: var(--rlg); padding: 14px; }
+.auto-card-title { font-size: 12px; font-weight: 500; color: var(--txt); margin-bottom: 4px; }
+.auto-card-sub { font-size: 11px; color: var(--mute); line-height: 1.5; margin-bottom: 10px; }
+.f-sel { width: auto; background: var(--surf); border: 0.5px solid var(--bdr); border-radius: var(--rmd); padding: 7px 10px; font-size: 12px; color: var(--txt); font-family: var(--fb); outline: none; }
+
+/* ─── SENT ─── */
+.sent-top { padding: 24px 18px 12px; text-align: center; }
+.success-ring { width: 72px; height: 72px; border-radius: 50%; background: var(--green-light); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
+.success-ring svg { fill: var(--green); }
+.sent-title { font-family: var(--fh); font-size: 20px; font-weight: 800; color: var(--txt); margin-bottom: 4px; }
+.sent-sub { font-size: 12px; color: var(--mute); line-height: 1.6; }
+.sent-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 12px; }
+.sent-shot { border: 1px solid var(--green); border-radius: var(--rlg); background: var(--green-light); aspect-ratio: 4/3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.sent-shot svg { fill: var(--green); opacity: .35; }
+.sent-shot-lbl { font-size: 10px; color: var(--green); font-weight: 500; }
+.rec-list { padding: 0 16px 12px; }
+.rec-item { background: var(--surf2); border: 0.5px solid var(--bdr); border-radius: var(--rlg); padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.rec-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--fh); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.rec-name { font-size: 13px; font-weight: 500; color: var(--txt); }
+.rec-via { font-size: 11px; color: var(--mute); }
+.rec-tick { margin-left: auto; color: var(--green); font-size: 15px; font-weight: 700; }
+.log-card { background: var(--surf2); border: 0.5px solid var(--bdr); border-radius: var(--rlg); padding: 12px; margin: 0 16px 16px; }
+.log-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--bdr); }
+.log-row:last-child { border-bottom: none; }
+.lk { font-size: 11px; color: var(--mute); }
+.lv { font-size: 11px; font-weight: 500; color: var(--txt); }
+.lv.ok { color: var(--green); }
+
+/* ─── NAV BAR ─── */
+.nav-bar {
+  background: var(--surf);
+  border-top: 0.5px solid var(--bdr);
+  padding: 8px 0 calc(var(--safe-area-bottom) + 8px);
+  display: flex;
+  justify-content: space-around;
+  flex-shrink: 0;
+}
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 10px; border-radius: var(--rmd); -webkit-user-select: none; user-select: none; }
+.nav-item:active { background: var(--surf2); }
+.nav-item svg { fill: var(--mute); transition: fill .15s; }
+.nav-item.on svg { fill: var(--red); }
+.nav-lbl { font-size: 10px; color: var(--mute); font-weight: 500; transition: color .15s; }
+.nav-item.on .nav-lbl { color: var(--red); }
+
+/* ─── INSTALL BANNER ─── */
+#install-banner {
+  display: none;
+  background: var(--red);
+  padding: 10px 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#install-banner.show { display: flex; }
+.install-txt { flex: 1; font-size: 12px; color: #fff; line-height: 1.4; }
+.install-txt strong { font-weight: 700; display: block; }
+.install-btn { background: #fff; color: var(--red); border: none; border-radius: var(--rmd); padding: 7px 14px; font-family: var(--fh); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.install-dismiss { background: none; border: none; color: rgba(255,255,255,.6); cursor: pointer; font-size: 18px; padding: 0 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- STATUS BAR -->
+  <div class="sbar">
+    <span class="sbar-time" id="clk">9:41</span>
+    <div class="sbar-icons">
+      <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="3" height="7" rx="1"/><rect x="4" y="2" width="3" height="8" rx="1"/><rect x="8" y="0" width="3" height="10" rx="1"/></svg>
+      <svg width="14" height="10" viewBox="0 0 14 10"><path d="M7 2C4.8 2 2.9 2.9 1.5 4.3L0 2.8C1.8 1 4.3 0 7 0s5.2 1 7 2.8L12.5 4.3C11.1 2.9 9.2 2 7 2zm0 4c-1.1 0-2.1.4-2.8 1.1L3 5.9C4.1 4.7 5.5 4 7 4s2.9.7 4 1.9L9.8 7.1C9.1 6.4 8.1 6 7 6zm0 3c-.6 0-1.1.2-1.5.6L7 11l1.5-1.4C8.1 9.2 7.6 9 7 9z"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="19" height="11" rx="2" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1"/><rect x="1" y="1" width="14" height="9" rx="1.5"/><rect x="20" y="3.5" width="2" height="4" rx="1"/></svg>
+    </div>
+  </div>
+
+  <!-- APP HEADER -->
+  <div class="app-header">
+    <div class="header-row">
+      <div class="logo-text">
+        Ride<span class="dim">Safe</span>
+        <svg style="width:18px;height:18px;fill:#fff;opacity:.85;" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+      </div>
+      <button class="notif-btn" onclick="alert('No new notifications.')">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      </button>
+    </div>
+    <div class="header-sub">Your personal safety companion for every ride</div>
+  </div>
+
+  <!-- BRAND STRIP -->
+  <div class="brand-strip">
+    <div class="brand-badge">AI</div>
+    <div class="brand-divider"></div>
+    <div class="brand-name">A product of <strong>Ascendent Imperion (AI) Solutions</strong></div>
+  </div>
+
+  <!-- INSTALL BANNER -->
+  <div id="install-banner">
+    <div class="install-txt">
+      <strong>Install RideSafe</strong>
+      Add to your home screen for quick access before every ride.
+    </div>
+    <button class="install-btn" id="install-btn">Install</button>
+    <button class="install-dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: HOME
+  ══════════════════════════════════════ -->
+  <div class="screen active" id="scr-home">
+    <div class="home-banner">
+      <div class="banner-icon">
+        <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+      </div>
+      <div class="banner-title">Before you ride — snap 2 photos</div>
+      <div class="banner-sub">Driver's face + licence plate. Takes 15 seconds.</div>
+    </div>
+
+    <div class="progress-steps">
+      <div class="ps-item">
+        <div class="ps-dot active" id="pd1">1</div>
+        <div class="ps-lbl live" id="pl1">Driver photo</div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-dot idle" id="pd2">2</div>
+        <div class="ps-lbl" id="pl2">Licence plate</div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-dot idle" id="pd3">3</div>
+        <div class="ps-lbl" id="pl3">Send alert</div>
+      </div>
+    </div>
+
+    <div class="snap-grid">
+      <div class="snap-slot" id="slot-d" onclick="goTo('cam-driver')">
+        <div class="slot-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <div class="slot-lbl">Tap to snap<br>driver photo</div>
+      </div>
+      <div class="snap-slot" id="slot-p" onclick="openPlate()">
+        <div class="slot-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg>
+        </div>
+        <div class="slot-lbl">Tap to snap<br>licence plate</div>
+      </div>
+    </div>
+
+    <button class="action-btn btn-primary" id="proceed-btn" disabled onclick="goTo('review')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      Review &amp; Send Alert
+    </button>
+
+    <div class="sos-bar" onclick="triggerSOS()">
+      <div>
+        <div class="sos-label">🚨 Emergency SOS</div>
+        <div class="sos-hint">Instantly alert all trusted contacts</div>
+      </div>
+      <button class="sos-chip">SOS</button>
+    </div>
+
+    <div class="recent-sec">
+      <div class="sec-head">Recent trips</div>
+      <div class="trip-row" onclick="goTo('sent')">
+        <div class="trip-thumb">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg>
+        </div>
+        <div class="trip-info">
+          <div class="trip-name">PHH 2241 · Carlos M.</div>
+          <div class="trip-meta">Today, 8:14 AM · Arima → POS</div>
+        </div>
+        <span class="trip-badge">Sent ✓</span>
+      </div>
+      <div class="trip-row">
+        <div class="trip-thumb">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg>
+        </div>
+        <div class="trip-info">
+          <div class="trip-name">PBG 9004 · Unknown driver</div>
+          <div class="trip-meta">Yesterday, 5:30 PM · POS → Arima</div>
+        </div>
+        <span class="trip-badge">Sent ✓</span>
+      </div>
+    </div>
+
+    <div class="footer-brand">
+      <div class="footer-ai-badge">AI</div>
+      <div class="footer-brand-text">A product of Ascendent Imperion (AI) Solutions</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: CAMERA — DRIVER
+  ══════════════════════════════════════ -->
+  <div class="screen" id="scr-cam-driver">
+    <div class="cam-wrap">
+      <div class="cam-topbar">
+        <button class="cam-back" onclick="goTo('home')">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Step 1 of 2
+        </button>
+        <span class="cam-title">Driver photo</span>
+      </div>
+      <div class="cam-modes">
+        <div class="cam-mode on">Photo</div>
+        <div class="cam-mode">Video</div>
+        <div class="cam-mode">Night</div>
+        <div class="cam-mode">Portrait</div>
+      </div>
+      <div class="viewfinder">
+        <div class="vf-inner">
+          <div class="vf-ghost"><svg width="100" height="100" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+          <div class="c-tl"></div><div class="c-tr"></div><div class="c-bl"></div><div class="c-br"></div>
+          <div class="vf-tip-box">Face clearly visible<br>Include upper body</div>
+          <div class="vf-pill">Frame driver's face &amp; shoulders</div>
+        </div>
+      </div>
+      <div class="cam-controls">
+        <button class="cam-side" onclick="goTo('home')"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>
+        <button class="shutter" id="shutter-driver" onclick="snapDriver()"><div class="shutter-inner"></div></button>
+        <button class="cam-side"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></button>
+      </div>
+      <div class="cam-tips">
+        <div class="tips-hd">Tips for a good shot</div>
+        <div class="tip-row">
+          <span class="tip-p">Face clearly visible</span>
+          <span class="tip-p">Good lighting</span>
+          <span class="tip-p">Don't rush</span>
+          <span class="tip-p">Upper body in frame</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: CAMERA — PLATE
+  ══════════════════════════════════════ -->
+  <div class="screen" id="scr-cam-plate">
+    <div class="cam-wrap">
+      <div class="cam-topbar">
+        <button class="cam-back" onclick="goTo('cam-driver')">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Step 2 of 2
+        </button>
+        <span class="cam-title">Licence plate</span>
+      </div>
+      <div class="cam-modes">
+        <div class="cam-mode on">Photo</div>
+        <div class="cam-mode">Video</div>
+        <div class="cam-mode">Night</div>
+        <div class="cam-mode">Portrait</div>
+      </div>
+      <div class="viewfinder">
+        <div class="vf-inner" style="flex-direction:column;gap:14px;">
+          <div class="vf-ghost"><svg width="70" height="70" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg></div>
+          <div class="plate-target">AB · 1234</div>
+          <div class="c-tl"></div><div class="c-tr"></div><div class="c-bl"></div><div class="c-br"></div>
+          <div class="vf-pill">Centre the plate — all digits must be readable</div>
+        </div>
+      </div>
+      <div class="cam-controls">
+        <button class="cam-side" onclick="goTo('cam-driver')"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>
+        <button class="shutter" id="shutter-plate" onclick="snapPlate()"><div class="shutter-inner"></div></button>
+        <button class="cam-side"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></button>
+      </div>
+      <div class="cam-tips">
+        <div class="tips-hd">Tips for a clear plate shot</div>
+        <div class="tip-row">
+          <span class="tip-p">All digits readable</span>
+          <span class="tip-p">Tap to focus first</span>
+          <span class="tip-p">Hold steady</span>
+          <span class="tip-p">Front &amp; rear if possible</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: REVIEW
+  ══════════════════════════════════════ -->
+  <div class="screen" id="scr-review">
+    <div class="scr-nav">
+      <button class="back-btn" onclick="goTo('home')"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+      <span class="scr-title">Review &amp; send</span>
+    </div>
+    <div class="dual-shots">
+      <div class="shot-card">
+        <div class="shot-img" style="background:#111;"><svg width="40" height="40" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><div class="shot-ok">✓ OK</div></div>
+        <div class="shot-foot"><div class="shot-lbl">Driver photo</div><div class="shot-sub">Face captured</div></div>
+      </div>
+      <div class="shot-card">
+        <div class="shot-img" style="background:#111;"><svg width="40" height="40" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg><div class="shot-ok">✓ OK</div></div>
+        <div class="shot-foot"><div class="shot-lbl">Licence plate</div><div class="shot-sub">Tap to re-snap</div></div>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <div class="meta-chip"><b>Arima, TT</b></div>
+      <div class="meta-chip"><b id="rts">—</b></div>
+    </div>
+    <div class="form-sec">
+      <label class="f-lbl">Licence plate (confirm or correct)</label>
+      <input class="f-inp f-plate" id="fi-plate" placeholder="e.g. PHH 2241" maxlength="10" autocomplete="off">
+      <label class="f-lbl">Driver name (optional)</label>
+      <input class="f-inp" id="fi-driver" placeholder="From ID or app" autocomplete="off">
+      <label class="f-lbl">Route / destination</label>
+      <input class="f-inp" id="fi-route" placeholder="e.g. Arima → Port of Spain" autocomplete="off">
+      <label class="f-lbl">Vehicle — colour &amp; make (optional)</label>
+      <input class="f-inp" id="fi-vehicle" placeholder="e.g. Blue Toyota Corolla" autocomplete="off">
+    </div>
+    <div class="contacts-sec">
+      <label class="f-lbl">Send to</label>
+      <div class="c-chips">
+        <div class="c-chip sel" onclick="this.classList.toggle('sel')"><div class="c-dot"></div>Mum</div>
+        <div class="c-chip sel" onclick="this.classList.toggle('sel')"><div class="c-dot"></div>Kezia</div>
+        <div class="c-chip" onclick="this.classList.toggle('sel')"><div class="c-dot"></div>Dad</div>
+        <div class="c-chip" onclick="this.classList.toggle('sel')"><div class="c-dot"></div>Work HR</div>
+        <div class="c-chip" onclick="this.classList.toggle('sel')" style="border-style:dashed;">+ Add</div>
+      </div>
+    </div>
+    <button class="action-btn btn-primary" style="margin-top:14px;" onclick="doSend()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      Send safety alert
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: CONTACTS
+  ══════════════════════════════════════ -->
+  <div class="screen" id="scr-contacts">
+    <div class="scr-nav">
+      <button class="back-btn" onclick="goTo('home')"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+      <span class="scr-title">Trusted contacts</span>
+    </div>
+    <div class="contacts-body">
+      <div class="contacts-note">These people receive your driver photo, licence plate, trip details, and live location whenever you send an alert.</div>
+      <div class="ct-item">
+        <div class="c-av" style="background:#FFEBEE;color:#C62828;">MR</div>
+        <div class="c-info"><div class="c-name">Mum (Rachel)</div><div class="c-role">Family · WhatsApp · +1868-***-4412</div></div>
+        <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+      </div>
+      <div class="ct-item">
+        <div class="c-av" style="background:#E8F5E9;color:#1B5E20;">KJ</div>
+        <div class="c-info"><div class="c-name">Kezia J.</div><div class="c-role">Best friend · SMS · +1868-***-7731</div></div>
+        <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+      </div>
+      <div class="ct-item">
+        <div class="c-av" style="background:#E3F2FD;color:#0D47A1;">DS</div>
+        <div class="c-info"><div class="c-name">Dad (Samuel)</div><div class="c-role">Family · SMS · +1868-***-2209</div></div>
+        <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+      </div>
+      <div class="ct-item">
+        <div class="c-av" style="background:#FFF8E1;color:#E65100;">HR</div>
+        <div class="c-info"><div class="c-name">Work HR</div><div class="c-role">Workplace · Email · hr@company.com</div></div>
+        <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+      </div>
+      <button class="add-ct" onclick="alert('Opens your phone contacts to add a trusted person.')">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Add trusted contact
+      </button>
+      <div class="auto-card">
+        <div class="auto-card-title">Auto-alert timer</div>
+        <div class="auto-card-sub">If you don't check in after your set time, RideSafe automatically alerts your contacts.</div>
+        <select class="f-sel">
+          <option>After 30 minutes</option>
+          <option selected>After 45 minutes</option>
+          <option>After 1 hour</option>
+          <option>Disabled</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: SENT / HISTORY
+  ══════════════════════════════════════ -->
+  <div class="screen" id="scr-sent">
+    <div class="sent-top">
+      <div class="success-ring"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+      <div class="sent-title">Alert sent!</div>
+      <div class="sent-sub">Both photos, trip details, and live location<br>sent to your trusted contacts.</div>
+    </div>
+    <div class="sent-shots">
+      <div class="sent-shot"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><div class="sent-shot-lbl">Driver photo ✓</div></div>
+      <div class="sent-shot"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg><div class="sent-shot-lbl">Licence plate ✓</div></div>
+    </div>
+    <div class="rec-list">
+      <div class="f-lbl" style="margin-bottom:10px;">Notified contacts</div>
+      <div class="rec-item">
+        <div class="rec-av" style="background:#FFEBEE;color:#C62828;">MR</div>
+        <div><div class="rec-name">Mum (Rachel)</div><div class="rec-via">2 photos + location · WhatsApp</div></div>
+        <div class="rec-tick">✓</div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-av" style="background:#E8F5E9;color:#1B5E20;">KJ</div>
+        <div><div class="rec-name">Kezia J.</div><div class="rec-via">2 photos + location · SMS</div></div>
+        <div class="rec-tick">✓</div>
+      </div>
+    </div>
+    <div class="f-lbl" style="padding:0 16px 8px;">Trip log</div>
+    <div class="log-card">
+      <div class="log-row"><span class="lk">Driver</span><span class="lv" id="log-driver">Carlos M.</span></div>
+      <div class="log-row"><span class="lk">Plate</span><span class="lv" id="log-plate">PHH 2241</span></div>
+      <div class="log-row"><span class="lk">Vehicle</span><span class="lv" id="log-vehicle">Blue Toyota Corolla</span></div>
+      <div class="log-row"><span class="lk">Route</span><span class="lv" id="log-route">Arima → Port of Spain</span></div>
+      <div class="log-row"><span class="lk">Time</span><span class="lv" id="log-time">—</span></div>
+      <div class="log-row"><span class="lk">Location</span><span class="lv">Arima, Trinidad</span></div>
+      <div class="log-row"><span class="lk">Photos</span><span class="lv ok">2 captured &amp; sent ✓</span></div>
+    </div>
+    <button class="action-btn btn-secondary" onclick="resetApp()">
+      <svg width="16" height="16" viewBox="0 0 24 24" style="fill:var(--txt)"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+      Start new trip
+    </button>
+    <div class="footer-brand">
+      <div class="footer-ai-badge">AI</div>
+      <div class="footer-brand-text">A product of Ascendent Imperion (AI) Solutions</div>
+    </div>
+  </div>
+
+  <!-- NAV BAR -->
+  <div class="nav-bar">
+    <div class="nav-item on" id="ni-home" onclick="goTo('home')">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-lbl">Home</span>
+    </div>
+    <div class="nav-item" id="ni-camera" onclick="goTo('cam-driver')">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2S13.77 8.8 12 8.8 8.8 10.23 8.8 12s1.43 3.2 3.2 3.2zm4.8-10.7l-1.83-2H9.03L7.2 4.5H4C2.9 4.5 2 5.4 2 6.5v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-13c0-1.1-.9-2-2-2h-3.2z"/></svg>
+      <span class="nav-lbl">Camera</span>
+    </div>
+    <div class="nav-item" id="ni-contacts" onclick="goTo('contacts')">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      <span class="nav-lbl">Contacts</span>
+    </div>
+    <div class="nav-item" id="ni-history" onclick="goTo('sent')">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+      <span class="nav-lbl">History</span>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+/* ── STATE ── */
+var driverDone = false, plateDone = false;
+
+/* ── HELPERS ── */
+function now12() {
+  var d = new Date(), h = d.getHours(), m = d.getMinutes(), a = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return h + ':' + (m < 10 ? '0' + m : m) + ' ' + a;
+}
+function nowFull() {
+  return new Date().toLocaleDateString('en-TT') + ' ' + now12();
+}
+
+/* ── NAVIGATION ── */
+function goTo(id) {
+  var screens = ['home','cam-driver','cam-plate','review','contacts','sent'];
+  screens.forEach(function(s) { document.getElementById('scr-' + s).classList.remove('active'); });
+  document.getElementById('scr-' + id).classList.add('active');
+
+  var navMap = { 'home':'home','cam-driver':'camera','cam-plate':'camera','review':'camera','contacts':'contacts','sent':'history' };
+  ['home','camera','contacts','history'].forEach(function(n) {
+    var el = document.getElementById('ni-' + n);
+    if (el) el.classList.remove('on');
+  });
+  var nk = navMap[id];
+  if (nk) { var el = document.getElementById('ni-' + nk); if (el) el.classList.add('on'); }
+
+  window.scrollTo(0, 0);
+}
+
+function openPlate() { goTo(driverDone ? 'cam-plate' : 'cam-driver'); }
+
+/* ── CAPTURE: DRIVER ── */
+function snapDriver() {
+  driverDone = true;
+  var s = document.getElementById('slot-d');
+  s.className = 'snap-slot done';
+  s.innerHTML = '<div class="slot-icon"><svg width="30" height="30" viewBox="0 0 24 24" style="fill:#2E7D32"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><div class="slot-lbl" style="color:#2E7D32">Driver captured</div><div class="slot-tick">✓</div>';
+  s.setAttribute('onclick', "goTo('cam-driver')");
+
+  var d = document.getElementById('pd1'); d.textContent = '✓'; d.className = 'ps-dot done';
+  document.getElementById('pl1').className = 'ps-lbl';
+  document.getElementById('pd2').className = 'ps-dot active';
+  document.getElementById('pl2').className = 'ps-lbl live';
+  checkProceed();
+  goTo('cam-plate');
+}
+
+/* ── CAPTURE: PLATE ── */
+function snapPlate() {
+  plateDone = true;
+  var s = document.getElementById('slot-p');
+  s.className = 'snap-slot done';
+  s.innerHTML = '<div class="slot-icon"><svg width="30" height="30" viewBox="0 0 24 24" style="fill:#2E7D32"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg></div><div class="slot-lbl" style="color:#2E7D32">Plate captured</div><div class="slot-tick">✓</div>';
+  s.setAttribute('onclick', 'openPlate()');
+
+  var d2 = document.getElementById('pd2'); d2.textContent = '✓'; d2.className = 'ps-dot done';
+  document.getElementById('pl2').className = 'ps-lbl';
+  document.getElementById('pd3').className = 'ps-dot active';
+  document.getElementById('pl3').className = 'ps-lbl live';
+  document.getElementById('rts').textContent = nowFull();
+  checkProceed();
+  goTo('review');
+}
+
+function checkProceed() {
+  document.getElementById('proceed-btn').disabled = !(driverDone && plateDone);
+}
+
+/* ── SEND ── */
+function doSend() {
+  var plate   = document.getElementById('fi-plate').value   || 'PHH 2241';
+  var driver  = document.getElementById('fi-driver').value  || 'Carlos M.';
+  var route   = document.getElementById('fi-route').value   || 'Arima → Port of Spain';
+  var vehicle = document.getElementById('fi-vehicle').value || 'Blue Toyota Corolla';
+  document.getElementById('log-plate').textContent   = plate.toUpperCase();
+  document.getElementById('log-driver').textContent  = driver;
+  document.getElementById('log-route').textContent   = route;
+  document.getElementById('log-vehicle').textContent = vehicle;
+  document.getElementById('log-time').textContent    = nowFull();
+  goTo('sent');
+}
+
+/* ── SOS ── */
+function triggerSOS() {
+  alert('🚨 SOS Activated!\n\nYour live location and last captured photos have been sent to:\n\n• Mum (Rachel) — WhatsApp\n• Kezia J. — SMS\n• Dad (Samuel) — SMS\n\nStay calm. Help is on the way.');
+}
+
+/* ── RESET ── */
+function resetApp() {
+  driverDone = false; plateDone = false;
+
+  var sd = document.getElementById('slot-d');
+  sd.className = 'snap-slot';
+  sd.innerHTML = '<div class="slot-icon"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><div class="slot-lbl">Tap to snap<br>driver photo</div>';
+  sd.setAttribute('onclick', "goTo('cam-driver')");
+
+  var sp = document.getElementById('slot-p');
+  sp.className = 'snap-slot';
+  sp.innerHTML = '<div class="slot-icon"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg></div><div class="slot-lbl">Tap to snap<br>licence plate</div>';
+  sp.setAttribute('onclick', 'openPlate()');
+
+  ['pd1','pd2','pd3'].forEach(function(id, i) {
+    var el = document.getElementById(id);
+    el.className = 'ps-dot ' + (i === 0 ? 'active' : 'idle');
+    el.textContent = i + 1;
+  });
+  document.getElementById('pl1').className = 'ps-lbl live';
+  document.getElementById('pl2').className = 'ps-lbl';
+  document.getElementById('pl3').className = 'ps-lbl';
+  document.getElementById('proceed-btn').disabled = true;
+  ['fi-plate','fi-driver','fi-route','fi-vehicle'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  goTo('home');
+}
+
+/* ── CLOCK ── */
+function updateClock() {
+  var d = new Date(), h = d.getHours(), m = d.getMinutes();
+  document.getElementById('clk').textContent = (h % 12 || 12) + ':' + (m < 10 ? '0' + m : m);
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+/* ── PWA: SERVICE WORKER ── */
+if ('serviceWorker' in navigator) {
+  var swCode = [
+    "const CACHE = 'ridesafe-v1';",
+    "const ASSETS = ['/'];",
+    "self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))); self.skipWaiting(); });",
+    "self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))); });",
+    "self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });"
+  ].join('\n');
+  var swBlob = new Blob([swCode], { type: 'application/javascript' });
+  var swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).catch(function() {});
+}
+
+/* ── PWA: INSTALL PROMPT ── */
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+document.getElementById('install-btn').addEventListener('click', function() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function() {
+      deferredPrompt = null;
+      document.getElementById('install-banner').classList.remove('show');
+    });
+  }
+});
+window.addEventListener('appinstalled', function() {
+  document.getElementById('install-banner').classList.remove('show');
+});
+</script>
+</body>
+</html>
